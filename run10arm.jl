@@ -9,14 +9,14 @@ using PyPlot
 using Statistics
 
 
-function karm_bandit(k::Int64=10, mean_range=10, steps::Int64=1000, runs::Int64=1)
+function karm_bandit(k::Int64=10, steps::Int64=1000, runs::Int64=1)
 # k : Number of arms
     # mean_range : range of values that the mean for each arm is sampled from
     # steps : number of steps the simulation runs for.
 
     # Array of distributions
-    distributions = [Normal(m) for m in (mean_range*rand(k) .- mean_range / 2)]
-
+    means = [m for m in rand(Normal(),k)]
+    distributions = [Normal(m) for m in means]
 
     # Q array of reward estimates
     Q = [0.0 for i in 1:k]
@@ -26,17 +26,25 @@ function karm_bandit(k::Int64=10, mean_range=10, steps::Int64=1000, runs::Int64=
 
     # Simulate rewards
     # ith row is ith time step, jth column is jth run
-    rewards = Array{Float64}(undef,steps,runs)
+    greedy_rewards = Array{Float64}(undef,steps,runs)
+    eps1_rewards = Array{Float64}(undef,steps,runs)
+    eps2_rewards = Array{Float64}(undef,steps,runs)
     # cumulative_rewards = Array{Float64}(undef,steps)
     # cumulative_average = Array{Float64}(undef,steps)
+
+    eps1 = .1
+    eps2 = .05
+
+    # Main loop
     for jj=1:runs
         for ii=1:steps
 
             # Choose action
-            action = totally_greedy(Q,Qn)
+            action1 = totally_greedy(Q,Qn)
 
             # Store rewards
             rewards[ii,jj] = rand(distributions[action])
+            # println(rewards[ii,jj])
             
             # Update estimate of q*
             if Qn[action] > 0
@@ -64,31 +72,47 @@ function karm_bandit(k::Int64=10, mean_range=10, steps::Int64=1000, runs::Int64=
         avg_rewards[kk] = mean(rewards[kk,:])
     end
 
-    sum_plot = plot(1:steps, avg_rewards, linewidth=2);
-    display(sum_plot)
+    plot(1:(steps+1), vcat(0.0,avg_rewards), linewidth=2);
 
-    return rewards
+    # Max reward
+    plot(1:(steps+1), [maximum(means) for i in 1:(steps+1)], linewidth=1, linestyle="--")
+    # display(sum_plot)
+
+    return avg_rewards, means, Q, Qn
 
 end
 
 
 function totally_greedy(Q,Qn)::Int64
     # Make sure all options are chosen at least once
-    if length(findall(Qn .== 0)) < 0
-        unexplored_vec = findall(Qn .== 0)
-        return unexplored_vec[rand(1:length(unexplored_vec))]
-    else
+    # println(length(findall(Qn .== 0)))
+    # if length(findall(Qn .== 0)) > 0
+    #     unexplored_vec = findall(Qn .== 0)
+    #     # println("length(findall(Qn .== 0)) < 0")
+    #     return unexplored_vec[rand(1:length(unexplored_vec))]
+    # else
         if length(findall(Q .== maximum(Q))) == 1
+            # println("length(findall(Q .== maximum(Q))) == 1")
             return argmax(Q)
         else
             # Choose randomly among largest values
+            # println("else")
             max_vec = findall(Q .== maximum(Q))
             return max_vec[rand(1:length(max_vec))]
         end
+    # end
+end
+
+
+function explore(Q,Qn,eps)::Int64
+    explore_bool = rand(Binomial(1,eps)) # Takes exploration action with probability 1 - eps. Binomial
+    if explore_bool == 1
+        # Exploration action
+        return rand(1:length(Q))
+    else
+        # Greedy action
+        max_vec = findall(Q .== maximum(Q))
+        return max_vec[rand(1:length(max_vec))]
     end
 end
 
-
-function my_test_function()
-    return 1
-end
