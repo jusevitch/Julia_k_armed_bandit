@@ -1,5 +1,8 @@
 # Julia_k_armed_bandit
-Implementation of k-armed Bandit problems from Sutton and Barto book in Julia
+Implementation of k-armed Bandit problems from Sutton and Barto book in Julia.
+
+[![Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept.](https://www.repostatus.org/badges/latest/concept.svg)](https://www.repostatus.org/#concept)
+
 
 I'm currently learning about Reinforcement Learning and Julia simultaneously. This repo contains implementations of problems
 from the classic Sutton and Barto book (Reinforcement Learning)[http://incompleteideas.net/book/the-book.html]. 
